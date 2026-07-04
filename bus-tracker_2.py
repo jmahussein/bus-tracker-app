@@ -8,10 +8,12 @@ import hashlib
 import base64
 import sqlite3
 from io import BytesIO
+import plotly.express as px
+import plotly.graph_objects as go
 import os
 
-
 # ====================== DATABASE LAYER ======================
+
 
 # Keeps your DB file permanently safe on Streamlit Cloud servers
  # 1. Get the directory where your script is running
@@ -25,9 +27,15 @@ def get_connection():
     # check_same_thread=False prevents threading crashes in Streamlit
     return sqlite3.connect(DB_NAME, check_same_thread=False)
 
+
 def init_database():
     conn = get_connection()
     c = conn.cursor()
+
+
+def hash_password(password: str) -> str:
+    """Securely hash a password using SHA-256."""
+    return hashlib.sha256(password.encode()).hexdigest()
 
     
     # Users table
@@ -1473,5 +1481,77 @@ with tab6:
         else:
             st.warning("Please select at least one month.")
 
-st.caption("✅ Multi-user • PDF Reports • Built with ❤️ using Streamlit")
+# ====================== USER MANAGEMENT (New) ======================
+with tab7:
+    st.subheader("👥 User Administration")
+    if st.session_state.current_role != "admin":
+        st.error("Admin access required")
+    else:
+        st.markdown("### Create New User")
+        col1, col2 = st.columns(2)
+        with col1:
+            new_user = st.text_input("New Username")
+        with col2:
+            new_pass = st.text_input("Password", type="password")
+            new_role = st.selectbox("Role", ["user", "admin"])
+        
+        if st.button("Create User"):
+            if new_user and new_pass:
+                conn = get_connection()
+                try:
+                    conn.execute("INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+                                (new_user, hash_password(new_pass), new_role, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                    conn.commit()
+                    st.success("User created!")
+                    save_log(f"Created user: {new_user}")
+                except sqlite3.IntegrityError:
+                    st.error("Username already exists")
+                conn.close()
+
+# ====================== CHANGE PASSWORD ======================
+        st.divider()
+        st.markdown("### Change Password")
+        old_pass = st.text_input("Current Password", type="password", key="old")
+        new_pass1 = st.text_input("New Password", type="password", key="new1")
+        new_pass2 = st.text_input("Confirm New Password", type="password", key="new2")
+        
+        if st.button("Update Password"):
+            if not old_pass or not new_pass1 or not new_pass2:
+                st.error("All fields are required.")
+            elif new_pass1 != new_pass2:
+                st.error("New passwords do not match.")
+            else:
+                # 1. Fetch the logged-in admin's username from session state
+                current_username = st.session_state.get("username", "admin")
+                
+                # 2. Hash the inputs for security comparison
+                old_hash = hash_password(old_pass)
+                new_hash = hash_password(new_pass1)
+                
+                conn = get_connection()
+                c = conn.cursor()
+                
+                # 3. Verify if current password is correct
+                c.execute("SELECT password_hash FROM users WHERE username = ?", (current_username,))
+                row = c.fetchone()
+                
+                if row and row[0] == old_hash:
+                    # 4. Perform the update
+                    c.execute("""
+                        UPDATE users 
+                        SET password_hash = ?, updated_at = ? 
+                        WHERE username = ?
+                    """, (new_hash, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), current_username))
+                    
+                    conn.commit()
+                    st.success("Password updated successfully!")
+                    save_log(f"Password changed for user: {current_username}")
+                else:
+                    st.error("Incorrect current password.")
+                
+                conn.close()
+
+# ====================== OTHER TABS ======================
+
+st.caption("✅ Multi-user • PDF Reports • Audit Logs Active")
 
