@@ -14,7 +14,7 @@ import os
 # ====================== DATABASE LAYER ======================
 
 # Keeps your DB file permanently safe on Streamlit Cloud servers
- 1. Get the directory where your script is running
+ # 1. Get the directory where your script is running
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 2. Force an absolute path to ensure write permissions
