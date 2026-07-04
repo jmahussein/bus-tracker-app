@@ -1467,5 +1467,5 @@ with tab6:
         else:
             st.warning("Please select at least one month.")
 
-st.caption("✅ Multi-user • PDF Reports • Audit Logs Active")
+st.caption("✅ Multi-user • PDF Reports • Built with ❤️ using Streamlit")
 
