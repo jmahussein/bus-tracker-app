@@ -1,0 +1,13 @@
+To make it shared online (Free):
+
+Upload the file to a GitHub repository
+Go to https://share.streamlit.io
+Deploy it
+Share the link with your partner
+
+
+
+Default Login:
+
+admin / admin123 (can add users)
+partner / partner2026
