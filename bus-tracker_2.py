@@ -8,11 +8,13 @@ import hashlib
 import base64
 import sqlite3
 from io import BytesIO
+import os
 
 
 # ====================== DATABASE LAYER ======================
 
-DB_NAME = "bus_income_tracker.db"
+# Keeps your DB file permanently safe on Streamlit Cloud servers
+DB_NAME = os.path.expanduser("~/data/bus_income_tracker.db")
 
 
 def get_connection():
