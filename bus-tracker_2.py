@@ -14,12 +14,16 @@ import os
 # ====================== DATABASE LAYER ======================
 
 # Keeps your DB file permanently safe on Streamlit Cloud servers
-DB_NAME = os.path.expanduser("~/data/bus_income_tracker.db")
+ 1. Get the directory where your script is running
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Force an absolute path to ensure write permissions
+DB_NAME = os.path.join(BASE_DIR, "bus_income_tracker.db")
 
 
 def get_connection():
-    return sqlite3.connect(DB_NAME)
-
+    # check_same_thread=False prevents threading crashes in Streamlit
+    return sqlite3.connect(DB_NAME, check_same_thread=False)
 
 def init_database():
     conn = get_connection()
